@@ -18,8 +18,17 @@ export class WorktreeCommitBenchmark extends BaseBenchmark {
   private baseRepoPath: string;
   private worktreeManager: WorktreeManager | null = null;
 
-  constructor(config: BenchmarkConfig, baseRepoPath: string) {
-    super("Concurrent Worktree Commit & Push", config);
+  constructor(
+    config: BenchmarkConfig,
+    baseRepoPath: string,
+    namePrefix?: string
+  ) {
+    super(
+      namePrefix
+        ? `${namePrefix} / Concurrent Worktree Commit & Push`
+        : "Concurrent Worktree Commit & Push",
+      config
+    );
     this.baseRepoPath = baseRepoPath;
   }
 

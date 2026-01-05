@@ -12,6 +12,20 @@ export interface BenchmarkConfig {
     name: string;
     privateKey: string;
   };
+  targets: {
+    codeStorage: {
+      enabled: boolean;
+    };
+    github: {
+      enabled: boolean;
+      token?: string;
+      owner?: string;
+      ownerType: "org" | "user";
+      repoPrefix: string;
+      visibility: "private" | "public";
+      apiBase: string;
+    };
+  };
   benchmarks: {
     initialPush: {
       enabled: boolean;
@@ -80,25 +94,27 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
   const defaultConfigPath = resolve(process.cwd(), "benchmark-config.json");
   const fileConfig = loadConfigFile(configPath || defaultConfigPath);
 
-  // Get organization name from environment
-  const orgName = process.env.ORG_NAME;
-  if (!orgName) {
-    throw new Error("ORG_NAME must be set in environment");
-  }
+  const codeStorageEnabled =
+    fileConfig.targets?.codeStorage?.enabled ?? true;
 
-  // Load private key from file
+  // Get organization name from environment (code.storage only)
+  const orgName = process.env.ORG_NAME || "";
+
+  // Load private key from file (code.storage only)
   const privateKeyPath = process.env.PRIVATE_KEY_PATH || "private-key.pem";
   const privateKeyFullPath = resolve(process.cwd(), privateKeyPath);
 
-  let privateKey: string;
-  try {
-    privateKey = readFileSync(privateKeyFullPath, "utf-8").trim();
-  } catch (error) {
-    throw new Error(
-      `Failed to load private key from ${privateKeyFullPath}: ${
-        error instanceof Error ? error.message : error
-      }`
-    );
+  let privateKey = "";
+  if (codeStorageEnabled) {
+    try {
+      privateKey = readFileSync(privateKeyFullPath, "utf-8").trim();
+    } catch (error) {
+      throw new Error(
+        `Failed to load private key from ${privateKeyFullPath}: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
   }
 
   // Merge with defaults
@@ -112,6 +128,35 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
     organization: {
       name: orgName,
       privateKey: privateKey,
+    },
+    targets: {
+      codeStorage: {
+        enabled: fileConfig.targets?.codeStorage?.enabled ?? true,
+      },
+      github: {
+        enabled: fileConfig.targets?.github?.enabled ?? false,
+        token: process.env.GITHUB_TOKEN,
+        owner:
+          fileConfig.targets?.github?.owner ||
+          process.env.GITHUB_OWNER ||
+          undefined,
+        ownerType:
+          (fileConfig.targets?.github?.ownerType as "org" | "user") ||
+          (process.env.GITHUB_OWNER_TYPE as "org" | "user") ||
+          "org",
+        repoPrefix:
+          fileConfig.targets?.github?.repoPrefix ||
+          process.env.GITHUB_REPO_PREFIX ||
+          "git-host-benchmark",
+        visibility:
+          (fileConfig.targets?.github?.visibility as "private" | "public") ||
+          (process.env.GITHUB_VISIBILITY as "private" | "public") ||
+          "private",
+        apiBase:
+          fileConfig.targets?.github?.apiBase ||
+          process.env.GITHUB_API_BASE ||
+          "https://api.github.com",
+      },
     },
     benchmarks: {
       initialPush: {
@@ -160,12 +205,23 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
 }
 
 function validateConfig(config: BenchmarkConfig): void {
-  if (!config.organization.name) {
-    throw new Error("Organization name is required");
+  if (config.targets.codeStorage.enabled) {
+    if (!config.organization.name) {
+      throw new Error("Organization name is required");
+    }
+
+    if (!config.organization.privateKey) {
+      throw new Error("Organization private key is required");
+    }
   }
 
-  if (!config.organization.privateKey) {
-    throw new Error("Organization private key is required");
+  if (config.targets.github.enabled) {
+    if (!config.targets.github.token) {
+      throw new Error("GITHUB_TOKEN must be set for GitHub benchmarks");
+    }
+    if (config.targets.github.ownerType === "org" && !config.targets.github.owner) {
+      throw new Error("GITHUB_OWNER must be set for org GitHub benchmarks");
+    }
   }
 
   if (!config.localRepo) {

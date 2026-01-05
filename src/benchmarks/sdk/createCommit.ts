@@ -5,15 +5,25 @@ import {
   runConcurrentBenchmark,
 } from "../base.js";
 import type { BenchmarkConfig } from "../../config.js";
-import { createStorageClient } from "../../utils/storage.js";
 import { generateFileContent, generateFileName } from "../../utils/testData.js";
+import type { RepoHandle, StorageProvider } from "../../providers/types.js";
 
 export class CreateCommitBenchmark extends BaseBenchmark {
-  private repoId: string;
+  private repo: RepoHandle;
+  private provider: StorageProvider;
 
-  constructor(config: BenchmarkConfig, repoId: string) {
-    super("SDK: createCommit", config);
-    this.repoId = repoId;
+  constructor(
+    config: BenchmarkConfig,
+    provider: StorageProvider,
+    repo: RepoHandle,
+    namePrefix?: string
+  ) {
+    super(
+      namePrefix ? `${namePrefix} / SDK: createCommit` : "SDK: createCommit",
+      config
+    );
+    this.provider = provider;
+    this.repo = repo;
   }
 
   async run(): Promise<BenchmarkResult | BenchmarkResult[]> {
@@ -33,13 +43,6 @@ export class CreateCommitBenchmark extends BaseBenchmark {
     console.log(`  Files per commit: ${filesPerCommitLevels.join(", ")}`);
     console.log(`  Concurrency levels: ${concurrencyLevels.join(", ")}`);
 
-    const storage = createStorageClient(this.config);
-    const repo = await storage.findOne({ id: this.repoId });
-
-    if (!repo) {
-      throw new Error(`Repository ${this.repoId} not found`);
-    }
-
     const allTimings: bigint[] = [];
     let totalErrors = 0;
     let globalCommitCounter = 0; // Global counter to ensure unique file names
@@ -54,24 +57,23 @@ export class CreateCommitBenchmark extends BaseBenchmark {
         // Warmup
         let warmupComplete = false;
         await this.warmup(async () => {
-          const commitBuilder = repo.createCommit({
-            targetBranch: "main",
-            commitMessage: `Warmup commit with ${fileCount} file(s)`,
-            author: { name: "Benchmark", email: "benchmark@test.local" },
-          });
+          const files: Array<{ path: string; content: string }> = [];
 
           for (let i = 0; i < fileCount; i++) {
             const content = generateFileContent(
               fileSize,
               `warmup-${fileSize}-${fileCount}-${i}`
             );
-            commitBuilder.addFileFromString(
-              `warmup-${fileSize}-${fileCount}-${i}.txt`,
-              content
-            );
+            files.push({
+              path: `warmup-${fileSize}-${fileCount}-${i}.txt`,
+              content,
+            });
           }
 
-          const result = await commitBuilder.send();
+          const result = await this.provider.createCommit(this.repo, {
+            message: `Warmup commit with ${fileCount} file(s)`,
+            files,
+          });
           if (!warmupComplete) {
             console.log("  Warmup result:");
             console.log(result);
@@ -90,14 +92,7 @@ export class CreateCommitBenchmark extends BaseBenchmark {
                   iterations,
                   async (index) => {
                     const commitId = globalCommitCounter++;
-                    const commitBuilder = repo.createCommit({
-                      targetBranch: "main",
-                      commitMessage: `Benchmark commit ${commitId} (${fileCount} file(s), ${fileSize}B each)`,
-                      author: {
-                        name: "Benchmark",
-                        email: "benchmark@test.local",
-                      },
-                    });
+                    const files: Array<{ path: string; content: string }> = [];
 
                     for (let i = 0; i < fileCount; i++) {
                       const fileName = generateFileName(
@@ -108,11 +103,14 @@ export class CreateCommitBenchmark extends BaseBenchmark {
                         fileSize,
                         `commit-${commitId}-file-${i}`
                       );
-                      commitBuilder.addFileFromString(fileName, content);
+                      files.push({ path: fileName, content });
                     }
 
-                    const result = await commitBuilder.send();
-                    return result.commitSha;
+                    const result = await this.provider.createCommit(this.repo, {
+                      message: `Benchmark commit ${commitId} (${fileCount} file(s), ${fileSize}B each)`,
+                      files,
+                    });
+                    return result;
                   },
                   (current, total) => {
                     if (current % Math.max(1, Math.floor(total / 10)) === 0) {
@@ -128,14 +126,7 @@ export class CreateCommitBenchmark extends BaseBenchmark {
                   concurrencyLevel,
                   async (index) => {
                     const commitId = globalCommitCounter++;
-                    const commitBuilder = repo.createCommit({
-                      targetBranch: "main",
-                      commitMessage: `Benchmark commit ${commitId} (${fileCount} file(s), ${fileSize}B each)`,
-                      author: {
-                        name: "Benchmark",
-                        email: "benchmark@test.local",
-                      },
-                    });
+                    const files: Array<{ path: string; content: string }> = [];
 
                     for (let i = 0; i < fileCount; i++) {
                       const fileName = generateFileName(
@@ -146,11 +137,14 @@ export class CreateCommitBenchmark extends BaseBenchmark {
                         fileSize,
                         `commit-${commitId}-file-${i}`
                       );
-                      commitBuilder.addFileFromString(fileName, content);
+                      files.push({ path: fileName, content });
                     }
 
-                    const result = await commitBuilder.send();
-                    return result.commitSha;
+                    const result = await this.provider.createCommit(this.repo, {
+                      message: `Benchmark commit ${commitId} (${fileCount} file(s), ${fileSize}B each)`,
+                      files,
+                    });
+                    return result;
                   },
                   (current, total) => {
                     if (current % Math.max(1, Math.floor(total / 10)) === 0) {

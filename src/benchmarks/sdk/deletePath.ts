@@ -5,15 +5,22 @@ import {
   runConcurrentBenchmark,
 } from "../base.js";
 import type { BenchmarkConfig } from "../../config.js";
-import { createStorageClient } from "../../utils/storage.js";
 import { generateFileContent, generateFileName } from "../../utils/testData.js";
+import type { RepoHandle, StorageProvider } from "../../providers/types.js";
 
 export class DeletePathBenchmark extends BaseBenchmark {
-  private repoId: string;
+  private repo: RepoHandle;
+  private provider: StorageProvider;
 
-  constructor(config: BenchmarkConfig, repoId: string) {
-    super("SDK: deletePath", config);
-    this.repoId = repoId;
+  constructor(
+    config: BenchmarkConfig,
+    provider: StorageProvider,
+    repo: RepoHandle,
+    namePrefix?: string
+  ) {
+    super(namePrefix ? `${namePrefix} / SDK: deletePath` : "SDK: deletePath", config);
+    this.provider = provider;
+    this.repo = repo;
   }
 
   async run(): Promise<BenchmarkResult | BenchmarkResult[]> {
@@ -24,29 +31,20 @@ export class DeletePathBenchmark extends BaseBenchmark {
       ? concurrency
       : [concurrency];
 
-    const storage = createStorageClient(this.config);
-    const repo = await storage.findOne({ id: this.repoId });
-
-    if (!repo) {
-      throw new Error(`Repository ${this.repoId} not found`);
-    }
-
     // First, create files to delete (total needed across all concurrency levels)
     const totalFilesNeeded = iterations * concurrencyLevels.length;
     console.log(`  Creating ${totalFilesNeeded} test files...`);
     for (let i = 0; i < totalFilesNeeded; i++) {
       const fileName = generateFileName("to-delete", i);
-      await repo
-        .createCommit({
-          targetBranch: "main",
-          commitMessage: `Create file for deletion test ${i}`,
-          author: { name: "Benchmark", email: "benchmark@test.local" },
-        })
-        .addFileFromString(
-          fileName,
-          generateFileContent(100, `delete-test-${i}`)
-        )
-        .send();
+      await this.provider.createCommit(this.repo, {
+        message: `Create file for deletion test ${i}`,
+        files: [
+          {
+            path: fileName,
+            content: generateFileContent(100, `delete-test-${i}`),
+          },
+        ],
+      });
     }
 
     console.log("  Files created, starting deletion benchmark...");
@@ -54,14 +52,19 @@ export class DeletePathBenchmark extends BaseBenchmark {
     // Warmup
     let warmupComplete = false;
     await this.warmup(async () => {
-      const result = await repo
-        .createCommit({
-          targetBranch: "main",
-          commitMessage: "Warmup deletion",
-          author: { name: "Benchmark", email: "benchmark@test.local" },
-        })
-        .deletePath("warmup.txt")
-        .send();
+      await this.provider.createCommit(this.repo, {
+        message: "Warmup deletion (setup)",
+        files: [
+          {
+            path: "warmup.txt",
+            content: generateFileContent(50, "warmup-delete"),
+          },
+        ],
+      });
+      const result = await this.provider.deletePath(this.repo, {
+        message: "Warmup deletion",
+        path: "warmup.txt",
+      });
       if (!warmupComplete) {
         console.log("  Warmup result:");
         console.log(result);
@@ -90,19 +93,12 @@ export class DeletePathBenchmark extends BaseBenchmark {
                   fileOffset + index
                 );
 
-                const result = await repo
-                  .createCommit({
-                    targetBranch: "main",
-                    commitMessage: `Delete ${fileName}`,
-                    author: {
-                      name: "Benchmark",
-                      email: "benchmark@test.local",
-                    },
-                  })
-                  .deletePath(fileName)
-                  .send();
+                const result = await this.provider.deletePath(this.repo, {
+                  message: `Delete ${fileName}`,
+                  path: fileName,
+                });
 
-                return result.commitSha;
+                return result;
               },
               (current, total) => {
                 if (current % Math.max(1, Math.floor(total / 10)) === 0) {
@@ -120,19 +116,12 @@ export class DeletePathBenchmark extends BaseBenchmark {
                   fileOffset + index
                 );
 
-                const result = await repo
-                  .createCommit({
-                    targetBranch: "main",
-                    commitMessage: `Delete ${fileName}`,
-                    author: {
-                      name: "Benchmark",
-                      email: "benchmark@test.local",
-                    },
-                  })
-                  .deletePath(fileName)
-                  .send();
+                const result = await this.provider.deletePath(this.repo, {
+                  message: `Delete ${fileName}`,
+                  path: fileName,
+                });
 
-                return result.commitSha;
+                return result;
               },
               (current, total) => {
                 if (current % Math.max(1, Math.floor(total / 10)) === 0) {

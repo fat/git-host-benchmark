@@ -1,32 +1,30 @@
 {
   "localRepo": "${LOCAL_REPO_PATH}",
   "workingDir": "./.benchmark-temp",
+  "printSummaryPerConfig": false,
+  "targets": {
+    "codeStorage": { "enabled": true },
+    "github": {
+      "enabled": false,
+      "owner": "your-org",
+      "ownerType": "org",
+      "repoPrefix": "git-host-benchmark",
+      "visibility": "private"
+    }
+  },
   "benchmarks": {
-    "initialPush": {
-      "enabled": true
-    },
-    "clone": {
-      "enabled": true,
-      "concurrency": 5,
-      "iterations": 10
-    },
-    "worktreeCommit": {
-      "enabled": true,
-      "concurrency": 10,
-      "iterations": 20
-    },
-    "sdkListFiles": {
-      "enabled": true,
-      "iterations": 50
-    },
+    "initialPush": { "enabled": true },
+    "clone": { "enabled": true, "concurrency": 5, "iterations": 10 },
+    "worktreeCommit": { "enabled": true, "concurrency": 10, "iterations": 20 },
+    "parallelPush": { "enabled": true, "concurrency": 5, "iterations": 10 },
+    "sdkListFiles": { "enabled": true, "iterations": 50, "concurrency": 1 },
     "sdkCreateCommit": {
       "enabled": true,
       "iterations": 20,
-      "fileSizes": [1024, 10240, 102400]
+      "fileSizes": [1024, 10240, 102400],
+      "filesPerCommit": 1,
+      "concurrency": 1
     },
-    "sdkDeletePath": {
-      "enabled": true,
-      "iterations": 20
-    }
+    "sdkDeletePath": { "enabled": true, "iterations": 20, "concurrency": 1 }
   }
 }

@@ -1,6 +1,5 @@
 import { BaseBenchmark, type BenchmarkResult } from "../base.js";
 import type { BenchmarkConfig } from "../../config.js";
-import { createStorageClient } from "../../utils/storage.js";
 import {
   gitRemoteAdd,
   gitRemoteExists,
@@ -9,13 +8,20 @@ import {
   getRepoSize,
 } from "../../utils/git.js";
 import { existsSync } from "node:fs";
+import type { RepoHandle, StorageProvider } from "../../providers/types.js";
 
 export class InitialPushBenchmark extends BaseBenchmark {
-  private repoId: string | null = null;
+  private repo: RepoHandle | null = null;
   private remoteUrl: string | null = null;
+  private provider: StorageProvider;
 
-  constructor(config: BenchmarkConfig) {
-    super("Initial Push", config);
+  constructor(
+    config: BenchmarkConfig,
+    provider: StorageProvider,
+    namePrefix?: string
+  ) {
+    super(namePrefix ? `${namePrefix} / Initial Push` : "Initial Push", config);
+    this.provider = provider;
   }
 
   async run(): Promise<BenchmarkResult> {
@@ -34,19 +40,11 @@ export class InitialPushBenchmark extends BaseBenchmark {
 
     console.log(`  Using local repository: ${localRepoPath}`);
 
-    // Create remote repository via SDK
+    // Create remote repository via provider
     console.log("  Creating remote repository...");
-    const storage = createStorageClient(this.config);
-    const repo = await storage.createRepo();
-    this.repoId = repo.id;
-
-    console.log(`  Created repository: ${repo.id}`);
-
-    // Get remote URL with authentication
-    this.remoteUrl = await repo.getRemoteURL({
-      permissions: ["git:read", "git:write"],
-      ttl: 3600, // 1 hour
-    });
+    this.repo = await this.provider.createRepo();
+    this.remoteUrl = this.repo.remoteUrl;
+    console.log(`  Created repository: ${this.repo.id}`);
 
     // Add remote to local repo (remove existing one if present for repeatability)
     console.log("  Adding remote...");
@@ -72,14 +70,14 @@ export class InitialPushBenchmark extends BaseBenchmark {
     console.log(`  Speed: ${speedMBps.toFixed(2)} MB/s`);
 
     return this.createResult([duration], 0, {
-      repoId: this.repoId,
+      repoId: this.repo?.id,
       repoSize,
       speedMBps,
     });
   }
 
-  getRepoId(): string | null {
-    return this.repoId;
+  getRepo(): RepoHandle | null {
+    return this.repo;
   }
 
   getRemoteUrl(): string | null {

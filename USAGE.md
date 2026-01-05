@@ -27,6 +27,9 @@ Edit `.env`:
 ORG_NAME=your-org-name
 PRIVATE_KEY_PATH=private-key.pem  # optional, defaults to private-key.pem
 LOCAL_REPO_PATH=./test-data/sample-repo
+GITHUB_TOKEN=ghp_your_token  # optional, for GitHub benchmarks
+GITHUB_OWNER=your-org        # required if GitHub ownerType=org
+GITHUB_OWNER_TYPE=org        # org or user
 ```
 
 ### 3. Create a Test Repository
@@ -67,6 +70,16 @@ The benchmark suite is configured via `benchmark-config.json`:
 {
   "localRepo": "${LOCAL_REPO_PATH}",
   "workingDir": "./.benchmark-temp",
+  "targets": {
+    "codeStorage": { "enabled": true },
+    "github": {
+      "enabled": false,
+      "owner": "your-org",
+      "ownerType": "org",
+      "repoPrefix": "git-host-benchmark",
+      "visibility": "private"
+    }
+  },
   "benchmarks": {
     "initialPush": {
       "enabled": true
@@ -81,18 +94,27 @@ The benchmark suite is configured via `benchmark-config.json`:
       "concurrency": 10,
       "iterations": 20
     },
+    "parallelPush": {
+      "enabled": true,
+      "concurrency": 5,
+      "iterations": 10
+    },
     "sdkListFiles": {
       "enabled": true,
-      "iterations": 50
+      "iterations": 50,
+      "concurrency": 1
     },
     "sdkCreateCommit": {
       "enabled": true,
       "iterations": 20,
-      "fileSizes": [1024, 10240, 102400]
+      "fileSizes": [1024, 10240, 102400],
+      "filesPerCommit": 1,
+      "concurrency": 1
     },
     "sdkDeletePath": {
       "enabled": true,
-      "iterations": 20
+      "iterations": 20,
+      "concurrency": 1
     }
   }
 }
@@ -103,6 +125,7 @@ The benchmark suite is configured via `benchmark-config.json`:
 - **localRepo**: Path to the local Git repository to use for testing
 - **workingDir**: Temporary directory for benchmark operations
 - **benchmarks**: Configuration for each benchmark type
+- **targets**: Providers to benchmark (code.storage and/or GitHub)
 
 #### Initial Push
 
@@ -145,6 +168,19 @@ Test the Git Storage SDK API operations.
 
 - **enabled**: Enable/disable this benchmark
 - **iterations**: Number of delete operations
+
+## GitHub Targets
+
+Enable GitHub by setting `targets.github.enabled` to `true` and providing a
+`GITHUB_TOKEN`. If `ownerType` is `org`, `GITHUB_OWNER` (or `targets.github.owner`)
+is required. For user-owned repos, set `ownerType` to `user` and omit the owner.
+
+You can also limit targets via CLI:
+
+```bash
+pnpm bench --targets codeStorage
+pnpm bench --targets github
+```
 
 ## Benchmark Types
 

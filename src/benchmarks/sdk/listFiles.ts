@@ -5,14 +5,21 @@ import {
   runConcurrentBenchmark,
 } from "../base.js";
 import type { BenchmarkConfig } from "../../config.js";
-import { createStorageClient } from "../../utils/storage.js";
+import type { RepoHandle, StorageProvider } from "../../providers/types.js";
 
 export class ListFilesBenchmark extends BaseBenchmark {
-  private repoId: string;
+  private repo: RepoHandle;
+  private provider: StorageProvider;
 
-  constructor(config: BenchmarkConfig, repoId: string) {
-    super("SDK: listFiles", config);
-    this.repoId = repoId;
+  constructor(
+    config: BenchmarkConfig,
+    provider: StorageProvider,
+    repo: RepoHandle,
+    namePrefix?: string
+  ) {
+    super(namePrefix ? `${namePrefix} / SDK: listFiles` : "SDK: listFiles", config);
+    this.provider = provider;
+    this.repo = repo;
   }
 
   async run(): Promise<BenchmarkResult | BenchmarkResult[]> {
@@ -23,20 +30,12 @@ export class ListFilesBenchmark extends BaseBenchmark {
       ? concurrency
       : [concurrency];
 
-    const storage = createStorageClient(this.config);
-    const repo = await storage.findOne({ id: this.repoId });
-
-    if (!repo) {
-      throw new Error(`Repository ${this.repoId} not found`);
-    }
-
     // Warmup
     let warmupComplete = false;
     await this.warmup(async () => {
-      const result = await repo.listFiles();
+      const count = await this.provider.listFiles(this.repo);
       if (!warmupComplete) {
-        console.log(`  Warmup result: ${result.paths.length} files found`);
-        console.log(result);
+        console.log(`  Warmup result: ${count} files found`);
         warmupComplete = true;
       }
     }, 3);
@@ -56,8 +55,8 @@ export class ListFilesBenchmark extends BaseBenchmark {
               this.name,
               iterations,
               async () => {
-                const result = await repo.listFiles();
-                return result.paths.length;
+                const count = await this.provider.listFiles(this.repo);
+                return count;
               },
               (current, total) => {
                 if (current % Math.max(1, Math.floor(total / 10)) === 0) {
@@ -70,8 +69,8 @@ export class ListFilesBenchmark extends BaseBenchmark {
               iterations,
               concurrencyLevel,
               async () => {
-                const result = await repo.listFiles();
-                return result.paths.length;
+                const count = await this.provider.listFiles(this.repo);
+                return count;
               },
               (current, total) => {
                 if (current % Math.max(1, Math.floor(total / 10)) === 0) {

@@ -11,8 +11,15 @@ export class CloneBenchmark extends BaseBenchmark {
   private remoteUrl: string;
   private workingDir: string;
 
-  constructor(config: BenchmarkConfig, remoteUrl: string) {
-    super("Concurrent Clone", config);
+  constructor(
+    config: BenchmarkConfig,
+    remoteUrl: string,
+    namePrefix?: string
+  ) {
+    super(
+      namePrefix ? `${namePrefix} / Concurrent Clone` : "Concurrent Clone",
+      config
+    );
     this.remoteUrl = remoteUrl;
     this.workingDir = config.workingDir;
   }

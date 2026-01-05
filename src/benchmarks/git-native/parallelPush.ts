@@ -16,9 +16,10 @@ export class ParallelPushBenchmark extends BaseBenchmark {
   constructor(
     config: BenchmarkConfig,
     remoteUrl: string,
-    baseRepoPath: string
+    baseRepoPath: string,
+    namePrefix?: string
   ) {
-    super("Parallel Push", config);
+    super(namePrefix ? `${namePrefix} / Parallel Push` : "Parallel Push", config);
     this.remoteUrl = remoteUrl;
     this.baseRepoPath = baseRepoPath;
   }
