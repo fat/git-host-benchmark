@@ -1,0 +1,26 @@
+{
+  "name": "git-storage-benchmark",
+  "version": "1.0.0",
+  "description": "Benchmark suite for Git Storage service",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "bench": "tsx src/index.ts",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": ["benchmark", "git", "storage"],
+  "author": "Anysphere Inc.",
+  "license": "MIT",
+  "dependencies": {
+    "@pierre/storage": "0.2",
+    "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/fs-extra": "^11.0.4",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0"
+  }
+}
+
