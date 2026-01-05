@@ -57,14 +57,15 @@ export class ParallelPushBenchmark extends BaseBenchmark {
       const content = generateFileContent(1024, `parallel-push-${i}`);
       writeFileSync(filePath, content);
 
-      execFileSync(
-        "git",
-        ["commit", "-avn", "-m", `Parallel push benchmark commit ${i}`],
-        {
-          cwd: this.baseRepoPath,
-          stdio: "pipe",
-        }
-      );
+      execFileSync("git", ["add", "-A"], {
+        cwd: this.baseRepoPath,
+        stdio: "pipe",
+      });
+
+      execFileSync("git", ["commit", "-m", `Parallel push benchmark commit ${i}`], {
+        cwd: this.baseRepoPath,
+        stdio: "pipe",
+      });
 
       // Show progress
       if ((i + 1) % Math.max(1, Math.floor(totalBranches / 10)) === 0) {

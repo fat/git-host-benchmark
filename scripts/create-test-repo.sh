@@ -19,6 +19,8 @@ cd "$REPO_DIR"
 
 # Initialize git repo
 git init
+git config user.name "Benchmark User"
+git config user.email "benchmark@example.com"
 
 # Create test files
 echo "Generating test files..."
@@ -59,4 +61,3 @@ echo "Repository size: $(du -sh .git | cut -f1)"
 echo ""
 echo "You can now use this repository for benchmarking:"
 echo "  LOCAL_REPO_PATH=$REPO_DIR pnpm bench"
-

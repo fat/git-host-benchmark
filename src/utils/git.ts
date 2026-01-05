@@ -1,6 +1,6 @@
 import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync, rmSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 export interface GitCommandOptions {
   cwd?: string;
@@ -204,7 +204,7 @@ export class WorktreeManager {
    */
   createWorktree(branch: string): string {
     const worktreeId = `worktree-${this.nextId++}`;
-    const worktreePath = join(
+    const worktreePath = resolve(
       this.baseRepoPath,
       "..",
       `.worktree-${worktreeId}`

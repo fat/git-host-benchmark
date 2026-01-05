@@ -1,0 +1,32 @@
+{
+  "localRepo": "${LOCAL_REPO_PATH}",
+  "workingDir": "./.benchmark-temp",
+  "benchmarks": {
+    "initialPush": {
+      "enabled": true
+    },
+    "clone": {
+      "enabled": true,
+      "concurrency": 5,
+      "iterations": 10
+    },
+    "worktreeCommit": {
+      "enabled": true,
+      "concurrency": 10,
+      "iterations": 20
+    },
+    "sdkListFiles": {
+      "enabled": true,
+      "iterations": 50
+    },
+    "sdkCreateCommit": {
+      "enabled": true,
+      "iterations": 20,
+      "fileSizes": [1024, 10240, 102400]
+    },
+    "sdkDeletePath": {
+      "enabled": true,
+      "iterations": 20
+    }
+  }
+}
