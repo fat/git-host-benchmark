@@ -27,7 +27,7 @@ Edit `.env`:
 ORG_NAME=your-org-name
 PRIVATE_KEY_PATH=private-key.pem  # optional, defaults to private-key.pem
 LOCAL_REPO_PATH=./test-data/sample-repo
-GITHUB_TOKEN=ghp_your_token  # optional, for GitHub benchmarks
+GH_TOKEN=ghp_your_token      # optional, for GitHub benchmarks
 GITHUB_OWNER=your-org        # required if GitHub ownerType=org
 GITHUB_OWNER_TYPE=org        # org or user
 ```
@@ -99,6 +99,15 @@ The benchmark suite is configured via `benchmark-config.json`:
       "concurrency": 5,
       "iterations": 10
     },
+    "rampClone": {
+      "enabled": false,
+      "minConcurrency": 1,
+      "maxConcurrency": 20,
+      "step": 2,
+      "iterations": 10,
+      "stopP95Ms": 2000,
+      "stopErrorRate": 0.1
+    },
     "sdkListFiles": {
       "enabled": true,
       "iterations": 50,
@@ -168,6 +177,20 @@ Test the Git Storage SDK API operations.
 
 - **enabled**: Enable/disable this benchmark
 - **iterations**: Number of delete operations
+
+#### Ramp Clone
+
+Progressively increases clone concurrency until it hits a latency or error-rate
+threshold. Useful for identifying the knee where storage latency (e.g., EBS)
+starts to dominate.
+
+- **enabled**: Enable/disable this benchmark
+- **minConcurrency**: Starting concurrency level
+- **maxConcurrency**: Maximum concurrency level
+- **step**: Concurrency increment per step
+- **iterations**: Total clones per step
+- **stopP95Ms**: Stop when P95 latency exceeds this threshold
+- **stopErrorRate**: Stop when error rate exceeds this threshold
 
 ## GitHub Targets
 

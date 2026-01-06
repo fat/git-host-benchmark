@@ -34,6 +34,15 @@ interface GitHubBlobResponse {
   sha: string;
 }
 
+interface GitHubContentResponse {
+  sha: string;
+  type: string;
+}
+
+interface GitHubDeleteContentResponse {
+  commit: { sha: string };
+}
+
 export class GitHubProvider implements StorageProvider {
   name = "github";
   private token: string;
@@ -44,9 +53,9 @@ export class GitHubProvider implements StorageProvider {
   private apiBase: string;
 
   constructor(private config: BenchmarkConfig) {
-    const github = config.github;
+    const github = config.targets.github;
     if (!github?.token) {
-      throw new Error("GITHUB_TOKEN must be set for GitHub benchmarks");
+      throw new Error("GH_TOKEN must be set for GitHub benchmarks");
     }
 
     this.token = github.token;
@@ -112,11 +121,37 @@ export class GitHubProvider implements StorageProvider {
 
   async deletePath(repo: RepoHandle, input: DeletePathInput): Promise<string> {
     const { owner, repoName } = this.getRepoIdentity(repo);
-    return this.createCommitWithChanges(owner, repoName, repo, {
-      message: input.message,
-      adds: [],
-      deletes: [input.path],
-    });
+    const encodedPath = this.encodePath(input.path);
+    try {
+      const file = await this.request<GitHubContentResponse>(
+        "GET",
+        `/repos/${owner}/${repoName}/contents/${encodedPath}?ref=${repo.defaultBranch}`
+      );
+
+      if (file.type !== "file") {
+        throw new Error(`GitHub path is not a file: ${input.path}`);
+      }
+
+      const result = await this.request<GitHubDeleteContentResponse>(
+        "DELETE",
+        `/repos/${owner}/${repoName}/contents/${encodedPath}`,
+        {
+          message: input.message,
+          sha: file.sha,
+          branch: repo.defaultBranch,
+        }
+      );
+
+      return result.commit.sha;
+    } catch (error) {
+      if (process.env.BENCH_DEBUG_GITHUB_DELETE === "1") {
+        console.error(
+          `[github deletePath] ${owner}/${repoName} ${input.path}:`,
+          error instanceof Error ? error.message : error
+        );
+      }
+      throw error;
+    }
   }
 
   private async createCommitWithChanges(
@@ -242,5 +277,12 @@ export class GitHubProvider implements StorageProvider {
     }
 
     return (await response.json()) as T;
+  }
+
+  private encodePath(path: string): string {
+    return path
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
   }
 }

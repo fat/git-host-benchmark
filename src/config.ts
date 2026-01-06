@@ -45,6 +45,15 @@ export interface BenchmarkConfig {
       concurrency: number;
       iterations: number;
     };
+    rampClone: {
+      enabled: boolean;
+      minConcurrency: number;
+      maxConcurrency: number;
+      step: number;
+      iterations: number;
+      stopP95Ms?: number;
+      stopErrorRate?: number;
+    };
     sdkListFiles: {
       enabled: boolean;
       iterations: number;
@@ -135,7 +144,7 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
       },
       github: {
         enabled: fileConfig.targets?.github?.enabled ?? false,
-        token: process.env.GITHUB_TOKEN,
+        token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN,
         owner:
           fileConfig.targets?.github?.owner ||
           process.env.GITHUB_OWNER ||
@@ -176,6 +185,15 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         enabled: fileConfig.benchmarks?.parallelPush?.enabled ?? true,
         concurrency: fileConfig.benchmarks?.parallelPush?.concurrency ?? 5,
         iterations: fileConfig.benchmarks?.parallelPush?.iterations ?? 10,
+      },
+      rampClone: {
+        enabled: fileConfig.benchmarks?.rampClone?.enabled ?? false,
+        minConcurrency: fileConfig.benchmarks?.rampClone?.minConcurrency ?? 1,
+        maxConcurrency: fileConfig.benchmarks?.rampClone?.maxConcurrency ?? 20,
+        step: fileConfig.benchmarks?.rampClone?.step ?? 2,
+        iterations: fileConfig.benchmarks?.rampClone?.iterations ?? 10,
+        stopP95Ms: fileConfig.benchmarks?.rampClone?.stopP95Ms,
+        stopErrorRate: fileConfig.benchmarks?.rampClone?.stopErrorRate,
       },
       sdkListFiles: {
         enabled: fileConfig.benchmarks?.sdkListFiles?.enabled ?? true,
@@ -260,6 +278,28 @@ function validateConfig(config: BenchmarkConfig): void {
       config.benchmarks.parallelPush.iterations,
       "Parallel push iterations"
     );
+  }
+
+  if (config.benchmarks.rampClone.enabled) {
+    validatePositive(
+      config.benchmarks.rampClone.minConcurrency,
+      "Ramp clone min concurrency"
+    );
+    validatePositive(
+      config.benchmarks.rampClone.maxConcurrency,
+      "Ramp clone max concurrency"
+    );
+    validatePositive(config.benchmarks.rampClone.step, "Ramp clone step");
+    validatePositive(
+      config.benchmarks.rampClone.iterations,
+      "Ramp clone iterations"
+    );
+    if (
+      config.benchmarks.rampClone.maxConcurrency <
+      config.benchmarks.rampClone.minConcurrency
+    ) {
+      throw new Error("Ramp clone maxConcurrency must be >= minConcurrency");
+    }
   }
 
   if (config.benchmarks.sdkCreateCommit.enabled) {

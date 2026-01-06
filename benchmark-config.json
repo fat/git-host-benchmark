@@ -5,9 +5,9 @@
   "targets": {
     "codeStorage": { "enabled": true },
     "github": {
-      "enabled": false,
-      "owner": "your-org",
-      "ownerType": "org",
+      "enabled": true,
+      "owner": "pierre-tester",
+      "ownerType": "user",
       "repoPrefix": "git-host-benchmark",
       "visibility": "private"
     }
@@ -17,6 +17,15 @@
     "clone": { "enabled": true, "concurrency": 5, "iterations": 10 },
     "worktreeCommit": { "enabled": true, "concurrency": 10, "iterations": 20 },
     "parallelPush": { "enabled": true, "concurrency": 5, "iterations": 10 },
+    "rampClone": {
+      "enabled": false,
+      "minConcurrency": 1,
+      "maxConcurrency": 20,
+      "step": 2,
+      "iterations": 10,
+      "stopP95Ms": 2000,
+      "stopErrorRate": 0.1
+    },
     "sdkListFiles": { "enabled": true, "iterations": 50, "concurrency": 1 },
     "sdkCreateCommit": {
       "enabled": true,

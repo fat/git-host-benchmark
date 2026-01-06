@@ -15,6 +15,7 @@ import { InitialPushBenchmark } from "./benchmarks/git-native/initialPush.js";
 import { CloneBenchmark } from "./benchmarks/git-native/clone.js";
 import { WorktreeCommitBenchmark } from "./benchmarks/git-native/worktreeCommit.js";
 import { ParallelPushBenchmark } from "./benchmarks/git-native/parallelPush.js";
+import { RampCloneBenchmark } from "./benchmarks/git-native/rampClone.js";
 
 // SDK benchmarks
 import { ListFilesBenchmark } from "./benchmarks/sdk/listFiles.js";
@@ -63,7 +64,7 @@ Options:
   -c, --config <path>        Path to config file (default: benchmark-config.json)
   -o, --output <path>        Export results to JSON file
   -b, --benchmarks <list>    Comma-separated list of benchmarks to run
-                             (initialPush,clone,worktreeCommit,parallelPush,sdkListFiles,sdkCreateCommit,sdkDeletePath)
+                             (initialPush,clone,worktreeCommit,parallelPush,rampClone,sdkListFiles,sdkCreateCommit,sdkDeletePath)
   -t, --targets <list>       Comma-separated list of targets to run
                              (codeStorage,github)
   -h, --help                 Show this help message
@@ -235,6 +236,21 @@ async function main() {
             config,
             remoteUrl,
             baseClonePath,
+            namePrefix
+          );
+          const result = await benchmark.run();
+          processResults(result);
+        }
+
+        // 4b. Ramp Clone
+        if (config.benchmarks.rampClone.enabled && shouldRun("rampClone")) {
+          if (!remoteUrl) {
+            throw new Error("No remote URL available for ramp clone");
+          }
+
+          const benchmark = new RampCloneBenchmark(
+            config,
+            remoteUrl,
             namePrefix
           );
           const result = await benchmark.run();
