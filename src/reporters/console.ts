@@ -27,6 +27,70 @@ export class ConsoleReporter {
     console.log(colorize("  BENCHMARK SUMMARY", "bright"));
     console.log("=".repeat(80));
 
+    const targetSplit = allMetrics.some((m) => m.name.includes(" / "));
+
+    if (targetSplit) {
+      const grouped = new Map<string, Map<string, BenchmarkMetrics>>();
+      const targets: string[] = [];
+
+      for (const metrics of allMetrics) {
+        const [target, baseName] = metrics.name.split(" / ");
+        if (!targets.includes(target)) {
+          targets.push(target);
+        }
+        if (!grouped.has(baseName)) {
+          grouped.set(baseName, new Map());
+        }
+        grouped.get(baseName)?.set(target, metrics);
+      }
+
+      const nameWidth = Math.max(
+        20,
+        ...Array.from(grouped.keys()).map((name) => name.length)
+      );
+      const numWidth = 12;
+
+      console.log("");
+      const header = [
+        "Benchmark".padEnd(nameWidth),
+        ...targets.map((t) => t.padStart(numWidth)),
+      ].join(" │ ");
+      console.log(colorize(header, "bright"));
+      console.log("─".repeat(header.length));
+
+      for (const [baseName, byTarget] of grouped.entries()) {
+        let winnerTarget: string | null = null;
+        let winnerMean = Number.POSITIVE_INFINITY;
+
+        for (const target of targets) {
+          const metrics = byTarget.get(target);
+          if (metrics && metrics.latency.mean < winnerMean) {
+            winnerMean = metrics.latency.mean;
+            winnerTarget = target;
+          }
+        }
+
+        const row = [
+          colorize(baseName.padEnd(nameWidth), "cyan"),
+          ...targets.map((target) => {
+            const metrics = byTarget.get(target);
+            const value = metrics
+              ? formatLatency(metrics.latency.mean)
+              : "-";
+            const padded = value.padStart(numWidth);
+            return target === winnerTarget
+              ? colorize(padded, "bright")
+              : padded;
+          }),
+        ].join(" │ ");
+
+        console.log(row);
+      }
+
+      console.log("");
+      return;
+    }
+
     // Calculate column widths
     const nameWidth = Math.max(20, ...allMetrics.map((m) => m.name.length));
     const numWidth = 12;
@@ -41,6 +105,7 @@ export class ConsoleReporter {
       "Mean".padStart(numWidth),
       "P95".padStart(numWidth),
       "P99".padStart(numWidth),
+      "P99.9".padStart(numWidth),
       "Throughput".padStart(numWidth),
     ].join(" │ ");
     console.log(colorize(header, "bright"));
@@ -66,6 +131,7 @@ export class ConsoleReporter {
         formatLatency(metrics.latency.mean).padStart(numWidth),
         formatLatency(metrics.latency.p95).padStart(numWidth),
         formatLatency(metrics.latency.p99).padStart(numWidth),
+        formatLatency(metrics.latency.p999).padStart(numWidth),
         formatThroughput(metrics.throughput.opsPerSecond).padStart(numWidth),
       ].join(" │ ");
       console.log(row);
@@ -99,6 +165,7 @@ export class ConsoleReporter {
     console.log(`    Median:   ${formatLatency(metrics.latency.median)}`);
     console.log(`    P95:      ${formatLatency(metrics.latency.p95)}`);
     console.log(`    P99:      ${formatLatency(metrics.latency.p99)}`);
+    console.log(`    P99.9:    ${formatLatency(metrics.latency.p999)}`);
     console.log(`    StdDev:   ${formatLatency(metrics.latency.stdDev)}`);
 
     console.log(colorize("\n  Throughput:", "bright"));

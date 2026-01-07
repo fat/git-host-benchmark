@@ -69,6 +69,7 @@ export function calculateMetrics(result: BenchmarkResult): BenchmarkMetrics {
       median: calculatePercentile(sorted, 50),
       p95: calculatePercentile(sorted, 95),
       p99: calculatePercentile(sorted, 99),
+      p999: calculatePercentile(sorted, 99.9),
       stdDev,
     },
     throughput: {

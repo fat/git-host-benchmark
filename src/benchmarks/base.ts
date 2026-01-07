@@ -20,6 +20,7 @@ export interface BenchmarkMetrics {
     median: number;
     p95: number;
     p99: number;
+    p999: number;
     stdDev: number;
   };
   throughput: {

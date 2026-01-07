@@ -54,6 +54,15 @@ export interface BenchmarkConfig {
       stopP95Ms?: number;
       stopErrorRate?: number;
     };
+    rampParallelPush: {
+      enabled: boolean;
+      minConcurrency: number;
+      maxConcurrency: number;
+      step: number;
+      iterations: number;
+      stopP95Ms?: number;
+      stopErrorRate?: number;
+    };
     sdkListFiles: {
       enabled: boolean;
       iterations: number;
@@ -195,6 +204,17 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         stopP95Ms: fileConfig.benchmarks?.rampClone?.stopP95Ms,
         stopErrorRate: fileConfig.benchmarks?.rampClone?.stopErrorRate,
       },
+      rampParallelPush: {
+        enabled: fileConfig.benchmarks?.rampParallelPush?.enabled ?? false,
+        minConcurrency:
+          fileConfig.benchmarks?.rampParallelPush?.minConcurrency ?? 1,
+        maxConcurrency:
+          fileConfig.benchmarks?.rampParallelPush?.maxConcurrency ?? 10,
+        step: fileConfig.benchmarks?.rampParallelPush?.step ?? 1,
+        iterations: fileConfig.benchmarks?.rampParallelPush?.iterations ?? 5,
+        stopP95Ms: fileConfig.benchmarks?.rampParallelPush?.stopP95Ms,
+        stopErrorRate: fileConfig.benchmarks?.rampParallelPush?.stopErrorRate,
+      },
       sdkListFiles: {
         enabled: fileConfig.benchmarks?.sdkListFiles?.enabled ?? true,
         iterations: fileConfig.benchmarks?.sdkListFiles?.iterations ?? 50,
@@ -299,6 +319,33 @@ function validateConfig(config: BenchmarkConfig): void {
       config.benchmarks.rampClone.minConcurrency
     ) {
       throw new Error("Ramp clone maxConcurrency must be >= minConcurrency");
+    }
+  }
+
+  if (config.benchmarks.rampParallelPush.enabled) {
+    validatePositive(
+      config.benchmarks.rampParallelPush.minConcurrency,
+      "Ramp parallel push min concurrency"
+    );
+    validatePositive(
+      config.benchmarks.rampParallelPush.maxConcurrency,
+      "Ramp parallel push max concurrency"
+    );
+    validatePositive(
+      config.benchmarks.rampParallelPush.step,
+      "Ramp parallel push step"
+    );
+    validatePositive(
+      config.benchmarks.rampParallelPush.iterations,
+      "Ramp parallel push iterations"
+    );
+    if (
+      config.benchmarks.rampParallelPush.maxConcurrency <
+      config.benchmarks.rampParallelPush.minConcurrency
+    ) {
+      throw new Error(
+        "Ramp parallel push maxConcurrency must be >= minConcurrency"
+      );
     }
   }
 

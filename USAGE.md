@@ -108,6 +108,15 @@ The benchmark suite is configured via `benchmark-config.json`:
       "stopP95Ms": 2000,
       "stopErrorRate": 0.1
     },
+    "rampParallelPush": {
+      "enabled": false,
+      "minConcurrency": 1,
+      "maxConcurrency": 10,
+      "step": 1,
+      "iterations": 5,
+      "stopP95Ms": 3000,
+      "stopErrorRate": 0.1
+    },
     "sdkListFiles": {
       "enabled": true,
       "iterations": 50,
@@ -189,6 +198,19 @@ starts to dominate.
 - **maxConcurrency**: Maximum concurrency level
 - **step**: Concurrency increment per step
 - **iterations**: Total clones per step
+- **stopP95Ms**: Stop when P95 latency exceeds this threshold
+- **stopErrorRate**: Stop when error rate exceeds this threshold
+
+#### Ramp Parallel Push
+
+Progressively increases parallel push concurrency to stress packfile creation
+and upload. This is intended to surface storage tail-latency issues (e.g., EBS).
+
+- **enabled**: Enable/disable this benchmark
+- **minConcurrency**: Starting concurrency level
+- **maxConcurrency**: Maximum concurrency level
+- **step**: Concurrency increment per step
+- **iterations**: Total pushes per step
 - **stopP95Ms**: Stop when P95 latency exceeds this threshold
 - **stopErrorRate**: Stop when error rate exceeds this threshold
 

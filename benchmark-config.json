@@ -1,5 +1,5 @@
 {
-  "localRepo": "${LOCAL_REPO_PATH}",
+  "localRepo": "./test-data/large-repo",
   "workingDir": "./.benchmark-temp",
   "printSummaryPerConfig": false,
   "targets": {
@@ -25,6 +25,14 @@
       "iterations": 10,
       "stopP95Ms": 2000,
       "stopErrorRate": 0.1
+    },
+    "rampParallelPush": {
+      "enabled": true,
+      "minConcurrency": 20,
+      "maxConcurrency": 60,
+      "step": 20,
+      "iterations": 50,
+      "stopErrorRate": 0.05
     },
     "sdkListFiles": { "enabled": true, "iterations": 50, "concurrency": 1 },
     "sdkCreateCommit": {
