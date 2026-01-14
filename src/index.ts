@@ -13,6 +13,7 @@ import { GitHubProvider } from "./providers/github.js";
 // Native Git benchmarks
 import { InitialPushBenchmark } from "./benchmarks/git-native/initialPush.js";
 import { CloneBenchmark } from "./benchmarks/git-native/clone.js";
+import { ShallowCloneBenchmark } from "./benchmarks/git-native/shallowClone.js";
 import { WorktreeCommitBenchmark } from "./benchmarks/git-native/worktreeCommit.js";
 import { ParallelPushBenchmark } from "./benchmarks/git-native/parallelPush.js";
 import { RampCloneBenchmark } from "./benchmarks/git-native/rampClone.js";
@@ -65,7 +66,7 @@ Options:
   -c, --config <path>        Path to config file (default: benchmark-config.json)
   -o, --output <path>        Export results to JSON file
   -b, --benchmarks <list>    Comma-separated list of benchmarks to run
-                             (initialPush,clone,worktreeCommit,parallelPush,rampClone,rampParallelPush,sdkListFiles,sdkCreateCommit,sdkDeletePath)
+                             (initialPush,clone,shallowClone,worktreeCommit,parallelPush,rampClone,rampParallelPush,sdkListFiles,sdkCreateCommit,sdkDeletePath)
   -t, --targets <list>       Comma-separated list of targets to run
                              (codeStorage,github)
   -h, --help                 Show this help message
@@ -184,6 +185,13 @@ async function main() {
           processResults(result);
         }
 
+        // 2b. Shallow Clone
+        if (config.benchmarks.shallowClone.enabled && shouldRun("shallowClone") && remoteUrl) {
+          const benchmark = new ShallowCloneBenchmark(config, remoteUrl, namePrefix);
+          const result = await benchmark.run();
+          processResults(result);
+        }
+
         // 3. Worktree Commit
         if (
           config.benchmarks.worktreeCommit.enabled &&
@@ -244,49 +252,49 @@ async function main() {
         }
 
         // 4b. Ramp Clone
-        if (config.benchmarks.rampClone.enabled && shouldRun("rampClone")) {
-          if (!remoteUrl) {
-            throw new Error("No remote URL available for ramp clone");
-          }
+        // if (config.benchmarks.rampClone.enabled && shouldRun("rampClone")) {
+        //   if (!remoteUrl) {
+        //     throw new Error("No remote URL available for ramp clone");
+        //   }
 
-          const benchmark = new RampCloneBenchmark(
-            config,
-            remoteUrl,
-            namePrefix
-          );
-          const result = await benchmark.run();
-          processResults(result);
-        }
+        //   const benchmark = new RampCloneBenchmark(
+        //     config,
+        //     remoteUrl,
+        //     namePrefix
+        //   );
+        //   const result = await benchmark.run();
+        //   processResults(result);
+        // }
 
-        // 4c. Ramp Parallel Push
-        if (
-          config.benchmarks.rampParallelPush.enabled &&
-          shouldRun("rampParallelPush")
-        ) {
-          if (!remoteUrl) {
-            throw new Error("No remote URL available for ramp parallel push");
-          }
+        // // 4c. Ramp Parallel Push
+        // if (
+        //   config.benchmarks.rampParallelPush.enabled &&
+        //   shouldRun("rampParallelPush")
+        // ) {
+        //   if (!remoteUrl) {
+        //     throw new Error("No remote URL available for ramp parallel push");
+        //   }
 
-          if (!baseClonePath) {
-            console.log(
-              "\n⚠️  Ramp Parallel Push benchmark requires a cloned repository."
-            );
-            console.log("Creating a clone first...");
+        //   if (!baseClonePath) {
+        //     console.log(
+        //       "\n⚠️  Ramp Parallel Push benchmark requires a cloned repository."
+        //     );
+        //     console.log("Creating a clone first...");
 
-            const { gitClone } = await import("./utils/git.js");
-            baseClonePath = join(config.workingDir, "ramp-parallel-push-base");
-            await gitClone(remoteUrl, baseClonePath);
-          }
+        //     const { gitClone } = await import("./utils/git.js");
+        //     baseClonePath = join(config.workingDir, "ramp-parallel-push-base");
+        //     await gitClone(remoteUrl, baseClonePath);
+        //   }
 
-          const benchmark = new RampParallelPushBenchmark(
-            config,
-            remoteUrl,
-            baseClonePath,
-            namePrefix
-          );
-          const result = await benchmark.run();
-          processResults(result);
-        }
+        //   const benchmark = new RampParallelPushBenchmark(
+        //     config,
+        //     remoteUrl,
+        //     baseClonePath,
+        //     namePrefix
+        //   );
+        //   const result = await benchmark.run();
+        //   processResults(result);
+        // }
 
         // 5. SDK Benchmarks
         if (repo) {

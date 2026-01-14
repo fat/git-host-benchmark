@@ -86,6 +86,18 @@ export async function gitClone(
 }
 
 /**
+ * Shallow clone a repository (depth=1)
+ */
+export async function gitShallowClone(
+  url: string,
+  destination: string,
+  options?: GitCommandOptions & { depth?: number }
+): Promise<void> {
+  const depth = options?.depth ?? 1;
+  await gitAsync(["clone", "--depth", String(depth), url, destination], options);
+}
+
+/**
  * Initialize a new repository
  */
 export function gitInit(path: string, bare: boolean = false): void {

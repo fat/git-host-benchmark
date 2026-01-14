@@ -52,7 +52,7 @@ export class CodeStorageProvider implements StorageProvider {
     const commitBuilder = target.createCommit({
       targetBranch: repo.defaultBranch,
       commitMessage: input.message,
-      author: { name: "Benchmark", email: "benchmark@test.local" },
+      author: { name: "Sasha Solomon", email: "benchmark@test.local" },
     });
 
     for (const file of input.files) {
@@ -73,7 +73,7 @@ export class CodeStorageProvider implements StorageProvider {
       .createCommit({
         targetBranch: repo.defaultBranch,
         commitMessage: input.message,
-        author: { name: "Benchmark", email: "benchmark@test.local" },
+        author: { name: "Sasha Solomon", email: "benchmark@test.local" },
       })
       .deletePath(input.path)
       .send();

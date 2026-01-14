@@ -35,6 +35,11 @@ export interface BenchmarkConfig {
       concurrency: number;
       iterations: number;
     };
+    shallowClone: {
+      enabled: boolean;
+      concurrency: number;
+      iterations: number;
+    };
     worktreeCommit: {
       enabled: boolean;
       concurrency: number;
@@ -185,6 +190,11 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         concurrency: fileConfig.benchmarks?.clone?.concurrency ?? 5,
         iterations: fileConfig.benchmarks?.clone?.iterations ?? 10,
       },
+      shallowClone: {
+        enabled: fileConfig.benchmarks?.shallowClone?.enabled ?? true,
+        concurrency: fileConfig.benchmarks?.shallowClone?.concurrency ?? 5,
+        iterations: fileConfig.benchmarks?.shallowClone?.iterations ?? 10,
+      },
       worktreeCommit: {
         enabled: fileConfig.benchmarks?.worktreeCommit?.enabled ?? true,
         concurrency: fileConfig.benchmarks?.worktreeCommit?.concurrency ?? 10,
@@ -276,6 +286,11 @@ function validateConfig(config: BenchmarkConfig): void {
   if (config.benchmarks.clone.enabled) {
     validatePositive(config.benchmarks.clone.concurrency, "Clone concurrency");
     validatePositive(config.benchmarks.clone.iterations, "Clone iterations");
+  }
+
+  if (config.benchmarks.shallowClone.enabled) {
+    validatePositive(config.benchmarks.shallowClone.concurrency, "Shallow clone concurrency");
+    validatePositive(config.benchmarks.shallowClone.iterations, "Shallow clone iterations");
   }
 
   if (config.benchmarks.worktreeCommit.enabled) {

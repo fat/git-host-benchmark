@@ -1,5 +1,5 @@
 {
-  "localRepo": "./test-data/large-repo",
+  "localRepo": "../opencode",
   "workingDir": "./.benchmark-temp",
   "printSummaryPerConfig": false,
   "targets": {
