@@ -3,6 +3,7 @@ import type { BenchmarkConfig } from "../config.js";
 import type {
   CreateCommitInput,
   DeletePathInput,
+  ReadFileResult,
   RepoHandle,
   StorageProvider,
 } from "./types.js";
@@ -108,6 +109,18 @@ export class GitHubProvider implements StorageProvider {
     );
 
     return tree.tree.filter((entry) => entry.type === "blob").length;
+  }
+
+  async readFile(repo: RepoHandle, path: string): Promise<ReadFileResult> {
+    const { owner, repoName } = this.getRepoIdentity(repo);
+    const encodedPath = this.encodePath(path);
+    const response = await this.request<{ content: string; encoding: string; size: number }>(
+      "GET",
+      `/repos/${owner}/${repoName}/contents/${encodedPath}?ref=${repo.defaultBranch}`
+    );
+
+    const content = Buffer.from(response.content, "base64");
+    return { content, size: response.size };
   }
 
   async createCommit(repo: RepoHandle, input: CreateCommitInput): Promise<string> {

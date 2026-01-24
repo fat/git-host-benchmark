@@ -1,5 +1,5 @@
 {
-  "localRepo": "../opencode",
+  "localRepo": "./test-data/sample-repo",
   "workingDir": "./.benchmark-temp",
   "printSummaryPerConfig": false,
   "targets": {
@@ -35,6 +35,7 @@
       "stopErrorRate": 0.05
     },
     "sdkListFiles": { "enabled": true, "iterations": 50, "concurrency": 1 },
+    "sdkReadFile": { "enabled": true, "iterations": 50, "concurrency": 1 },
     "sdkCreateCommit": {
       "enabled": true,
       "iterations": 20,

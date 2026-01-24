@@ -15,10 +15,16 @@ export interface DeletePathInput {
   path: string;
 }
 
+export interface ReadFileResult {
+  content: Buffer;
+  size: number;
+}
+
 export interface StorageProvider {
   name: string;
   createRepo(): Promise<RepoHandle>;
   listFiles(repo: RepoHandle): Promise<number>;
+  readFile(repo: RepoHandle, path: string): Promise<ReadFileResult>;
   createCommit(repo: RepoHandle, input: CreateCommitInput): Promise<string>;
   deletePath(repo: RepoHandle, input: DeletePathInput): Promise<string>;
 }

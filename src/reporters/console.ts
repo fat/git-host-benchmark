@@ -27,112 +27,30 @@ export class ConsoleReporter {
     console.log(colorize("  BENCHMARK SUMMARY", "bright"));
     console.log("=".repeat(80));
 
-    const targetSplit = allMetrics.some((m) => m.name.includes(" / "));
+    // Calculate column width based on benchmark names
+    const colWidth = Math.max(14, ...allMetrics.map((m) => m.name.length + 2));
+    const labelWidth = 12;
 
-    if (targetSplit) {
-      const grouped = new Map<string, Map<string, BenchmarkMetrics>>();
-      const targets: string[] = [];
-
-      for (const metrics of allMetrics) {
-        const [target, baseName] = metrics.name.split(" / ");
-        if (!targets.includes(target)) {
-          targets.push(target);
-        }
-        if (!grouped.has(baseName)) {
-          grouped.set(baseName, new Map());
-        }
-        grouped.get(baseName)?.set(target, metrics);
-      }
-
-      const nameWidth = Math.max(
-        20,
-        ...Array.from(grouped.keys()).map((name) => name.length)
-      );
-      const numWidth = 12;
-
-      console.log("");
-      const header = [
-        "Benchmark".padEnd(nameWidth),
-        ...targets.map((t) => t.padStart(numWidth)),
-      ].join(" │ ");
-      console.log(colorize(header, "bright"));
-      console.log("─".repeat(header.length));
-
-      for (const [baseName, byTarget] of grouped.entries()) {
-        let winnerTarget: string | null = null;
-        let winnerMean = Number.POSITIVE_INFINITY;
-
-        for (const target of targets) {
-          const metrics = byTarget.get(target);
-          if (metrics && metrics.latency.mean < winnerMean) {
-            winnerMean = metrics.latency.mean;
-            winnerTarget = target;
-          }
-        }
-
-        const row = [
-          colorize(baseName.padEnd(nameWidth), "cyan"),
-          ...targets.map((target) => {
-            const metrics = byTarget.get(target);
-            const value = metrics
-              ? formatLatency(metrics.latency.mean)
-              : "-";
-            const padded = value.padStart(numWidth);
-            return target === winnerTarget
-              ? colorize(padded, "bright")
-              : padded;
-          }),
-        ].join(" │ ");
-
-        console.log(row);
-      }
-
-      console.log("");
-      return;
-    }
-
-    // Calculate column widths
-    const nameWidth = Math.max(20, ...allMetrics.map((m) => m.name.length));
-    const numWidth = 12;
-    const errorWidth = 10;
-
-    // Print header
+    // Header row with benchmark names
     console.log("");
     const header = [
-      "Benchmark".padEnd(nameWidth),
-      "Iterations".padStart(numWidth),
-      "Error Rate".padStart(errorWidth),
-      "Mean".padStart(numWidth),
-      "P95".padStart(numWidth),
-      "P99".padStart(numWidth),
-      "P99.9".padStart(numWidth),
-      "Throughput".padStart(numWidth),
+      "".padEnd(labelWidth),
+      ...allMetrics.map((m) => m.name.padStart(colWidth)),
     ].join(" │ ");
     console.log(colorize(header, "bright"));
     console.log("─".repeat(header.length));
 
-    // Print each benchmark
-    for (const metrics of allMetrics) {
-      const errorRate =
-        metrics.iterations > 0
-          ? (metrics.errorCount / metrics.iterations) * 100
-          : 0;
-      const errorRateStr = `${errorRate.toFixed(2)}%`;
-      const errorRatePadded = errorRateStr.padStart(errorWidth);
-      const errorRateColored =
-        errorRate > 0
-          ? colorize(errorRatePadded, "yellow")
-          : colorize(errorRatePadded, "green");
+    // Stats rows
+    const stats: { label: string; getter: (m: BenchmarkMetrics) => string }[] = [
+      { label: "P50", getter: (m) => formatLatency(m.latency.median) },
+      { label: "P95", getter: (m) => formatLatency(m.latency.p95) },
+      { label: "P99", getter: (m) => formatLatency(m.latency.p99) },
+    ];
 
+    for (const stat of stats) {
       const row = [
-        colorize(metrics.name.padEnd(nameWidth), "cyan"),
-        String(metrics.iterations).padStart(numWidth),
-        errorRateColored,
-        formatLatency(metrics.latency.mean).padStart(numWidth),
-        formatLatency(metrics.latency.p95).padStart(numWidth),
-        formatLatency(metrics.latency.p99).padStart(numWidth),
-        formatLatency(metrics.latency.p999).padStart(numWidth),
-        formatThroughput(metrics.throughput.opsPerSecond).padStart(numWidth),
+        colorize(stat.label.padEnd(labelWidth), "cyan"),
+        ...allMetrics.map((m) => stat.getter(m).padStart(colWidth)),
       ].join(" │ ");
       console.log(row);
     }

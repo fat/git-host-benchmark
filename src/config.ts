@@ -73,6 +73,11 @@ export interface BenchmarkConfig {
       iterations: number;
       concurrency: number | number[];
     };
+    sdkReadFile: {
+      enabled: boolean;
+      iterations: number;
+      concurrency: number | number[];
+    };
     sdkCreateCommit: {
       enabled: boolean;
       iterations: number;
@@ -229,6 +234,11 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         enabled: fileConfig.benchmarks?.sdkListFiles?.enabled ?? true,
         iterations: fileConfig.benchmarks?.sdkListFiles?.iterations ?? 50,
         concurrency: fileConfig.benchmarks?.sdkListFiles?.concurrency ?? 1,
+      },
+      sdkReadFile: {
+        enabled: fileConfig.benchmarks?.sdkReadFile?.enabled ?? true,
+        iterations: fileConfig.benchmarks?.sdkReadFile?.iterations ?? 50,
+        concurrency: fileConfig.benchmarks?.sdkReadFile?.concurrency ?? 1,
       },
       sdkCreateCommit: {
         enabled: fileConfig.benchmarks?.sdkCreateCommit?.enabled ?? true,

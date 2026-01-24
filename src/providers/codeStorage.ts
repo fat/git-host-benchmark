@@ -3,6 +3,7 @@ import type { BenchmarkConfig } from "../config.js";
 import type {
   CreateCommitInput,
   DeletePathInput,
+  ReadFileResult,
   RepoHandle,
   StorageProvider,
 } from "./types.js";
@@ -41,6 +42,30 @@ export class CodeStorageProvider implements StorageProvider {
 
     const result = await target.listFiles();
     return result.paths.length;
+  }
+
+  async readFile(repo: RepoHandle, path: string): Promise<ReadFileResult> {
+    const target = await this.storage.findOne({ id: repo.id });
+    if (!target) {
+      throw new Error(`Repository ${repo.id} not found`);
+    }
+
+    const response = await target.getFileStream({ path });
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("Failed to get reader from response body");
+    }
+
+    const chunks: Uint8Array[] = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const content = Buffer.concat(chunks.map((c) => Buffer.from(c)));
+    return { content, size: totalLength };
   }
 
   async createCommit(repo: RepoHandle, input: CreateCommitInput): Promise<string> {
