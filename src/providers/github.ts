@@ -3,6 +3,7 @@ import type { BenchmarkConfig } from "../config.js";
 import type {
   CreateCommitInput,
   DeletePathInput,
+  ForkRepoInput,
   ReadFileResult,
   RepoHandle,
   StorageProvider,
@@ -98,6 +99,10 @@ export class GitHubProvider implements StorageProvider {
       defaultBranch: repo.default_branch || "main",
       metadata: { owner, repo: repo.name },
     };
+  }
+
+  async forkRepo(_input: ForkRepoInput): Promise<RepoHandle> {
+    throw new Error("forkRepo is not supported for GitHub provider");
   }
 
   async listFiles(repo: RepoHandle): Promise<number> {

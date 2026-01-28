@@ -27,30 +27,27 @@ export class ConsoleReporter {
     console.log(colorize("  BENCHMARK SUMMARY", "bright"));
     console.log("=".repeat(80));
 
-    // Calculate column width based on benchmark names
-    const colWidth = Math.max(14, ...allMetrics.map((m) => m.name.length + 2));
-    const labelWidth = 12;
+    const nameWidth = Math.max(20, ...allMetrics.map((m) => m.name.length + 2));
+    const statWidth = 12;
 
-    // Header row with benchmark names
+    // Header row with stat names
     console.log("");
     const header = [
-      "".padEnd(labelWidth),
-      ...allMetrics.map((m) => m.name.padStart(colWidth)),
+      "Benchmark".padEnd(nameWidth),
+      "P50".padStart(statWidth),
+      "P95".padStart(statWidth),
+      "P99".padStart(statWidth),
     ].join(" │ ");
     console.log(colorize(header, "bright"));
     console.log("─".repeat(header.length));
 
-    // Stats rows
-    const stats: { label: string; getter: (m: BenchmarkMetrics) => string }[] = [
-      { label: "P50", getter: (m) => formatLatency(m.latency.median) },
-      { label: "P95", getter: (m) => formatLatency(m.latency.p95) },
-      { label: "P99", getter: (m) => formatLatency(m.latency.p99) },
-    ];
-
-    for (const stat of stats) {
+    // One row per benchmark
+    for (const m of allMetrics) {
       const row = [
-        colorize(stat.label.padEnd(labelWidth), "cyan"),
-        ...allMetrics.map((m) => stat.getter(m).padStart(colWidth)),
+        colorize(m.name.padEnd(nameWidth), "cyan"),
+        formatLatency(m.latency.median).padStart(statWidth),
+        formatLatency(m.latency.p95).padStart(statWidth),
+        formatLatency(m.latency.p99).padStart(statWidth),
       ].join(" │ ");
       console.log(row);
     }

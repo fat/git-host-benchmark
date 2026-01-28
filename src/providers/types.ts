@@ -20,9 +20,14 @@ export interface ReadFileResult {
   size: number;
 }
 
+export interface ForkRepoInput {
+  baseRepoId: string;
+}
+
 export interface StorageProvider {
   name: string;
   createRepo(): Promise<RepoHandle>;
+  forkRepo(input: ForkRepoInput): Promise<RepoHandle>;
   listFiles(repo: RepoHandle): Promise<number>;
   readFile(repo: RepoHandle, path: string): Promise<ReadFileResult>;
   createCommit(repo: RepoHandle, input: CreateCommitInput): Promise<string>;

@@ -3,6 +3,7 @@ import type { BenchmarkConfig } from "../config.js";
 import type {
   CreateCommitInput,
   DeletePathInput,
+  ForkRepoInput,
   ReadFileResult,
   RepoHandle,
   StorageProvider,
@@ -31,6 +32,25 @@ export class CodeStorageProvider implements StorageProvider {
       remoteUrl,
       defaultBranch: "main",
       metadata: { repoId: repo.id },
+    };
+  }
+
+  async forkRepo(input: ForkRepoInput): Promise<RepoHandle> {
+    const repo = await this.storage.createRepo({
+      baseRepo: {
+        id: input.baseRepoId,
+      },
+    });
+    const remoteUrl = await repo.getRemoteURL({
+      permissions: ["git:read", "git:write"],
+      ttl: 3600,
+    });
+
+    return {
+      id: repo.id,
+      remoteUrl,
+      defaultBranch: "main",
+      metadata: { repoId: repo.id, forkedFrom: input.baseRepoId },
     };
   }
 

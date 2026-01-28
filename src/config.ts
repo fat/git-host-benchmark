@@ -90,6 +90,11 @@ export interface BenchmarkConfig {
       iterations: number;
       concurrency: number | number[];
     };
+    sdkFork: {
+      enabled: boolean;
+      iterations: number;
+      concurrency: number | number[];
+    };
   };
 }
 
@@ -254,6 +259,11 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         enabled: fileConfig.benchmarks?.sdkDeletePath?.enabled ?? true,
         iterations: fileConfig.benchmarks?.sdkDeletePath?.iterations ?? 20,
         concurrency: fileConfig.benchmarks?.sdkDeletePath?.concurrency ?? 1,
+      },
+      sdkFork: {
+        enabled: fileConfig.benchmarks?.sdkFork?.enabled ?? true,
+        iterations: fileConfig.benchmarks?.sdkFork?.iterations ?? 10,
+        concurrency: fileConfig.benchmarks?.sdkFork?.concurrency ?? 1,
       },
     },
   };

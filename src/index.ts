@@ -24,6 +24,7 @@ import { ListFilesBenchmark } from "./benchmarks/sdk/listFiles.js";
 import { ReadFileBenchmark } from "./benchmarks/sdk/readFile.js";
 import { CreateCommitBenchmark } from "./benchmarks/sdk/createCommit.js";
 import { DeletePathBenchmark } from "./benchmarks/sdk/deletePath.js";
+import { ForkBenchmark } from "./benchmarks/sdk/fork.js";
 import { join } from "node:path";
 
 interface CliArgs {
@@ -67,7 +68,7 @@ Options:
   -c, --config <path>        Path to config file (default: benchmark-config.json)
   -o, --output <path>        Export results to JSON file
   -b, --benchmarks <list>    Comma-separated list of benchmarks to run
-                             (initialPush,clone,shallowClone,worktreeCommit,parallelPush,rampClone,rampParallelPush,sdkListFiles,sdkReadFile,sdkCreateCommit,sdkDeletePath)
+                             (initialPush,clone,shallowClone,worktreeCommit,parallelPush,rampClone,rampParallelPush,sdkListFiles,sdkReadFile,sdkCreateCommit,sdkDeletePath,sdkFork)
   -t, --targets <list>       Comma-separated list of targets to run
                              (codeStorage,github)
   -h, --help                 Show this help message
@@ -350,6 +351,21 @@ async function main() {
             shouldRun("sdkDeletePath")
           ) {
             const benchmark = new DeletePathBenchmark(
+              config,
+              target.provider,
+              repo,
+              namePrefix
+            );
+            const result = await benchmark.run();
+            processResults(result);
+          }
+
+          // SDK: fork
+          if (
+            config.benchmarks.sdkFork.enabled &&
+            shouldRun("sdkFork")
+          ) {
+            const benchmark = new ForkBenchmark(
               config,
               target.provider,
               repo,
