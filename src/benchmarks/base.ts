@@ -128,18 +128,19 @@ export async function runConcurrentBenchmark<T>(
   concurrency: number,
   operation: (index: number) => Promise<T>,
   onProgress?: (current: number, total: number) => void
-): Promise<{ results: T[]; timings: bigint[]; errors: number }> {
+): Promise<{ results: T[]; timings: bigint[]; errors: number; wallClockMs: number }> {
   const results: T[] = [];
   const timings: bigint[] = [];
   let errors = 0;
   let completed = 0;
 
-  const promises: Promise<void>[] = [];
+  const active = new Set<Promise<void>>();
+  const wallStart = process.hrtime.bigint();
 
   for (let i = 0; i < totalIterations; i++) {
     const index = i;
 
-    const promise = (async () => {
+    const promise: Promise<void> = (async () => {
       try {
         const start = process.hrtime.bigint();
         const result = await operation(index);
@@ -159,30 +160,21 @@ export async function runConcurrentBenchmark<T>(
           onProgress(completed, totalIterations);
         }
       }
-    })();
+    })().then(() => {
+      active.delete(promise);
+    });
 
-    promises.push(promise);
+    active.add(promise);
 
-    // Limit concurrency
-    if (promises.length >= concurrency) {
-      await Promise.race(promises);
-      // Remove completed promises
-      const stillRunning = promises.filter((p) => {
-        let resolved = false;
-        p.then(() => {
-          resolved = true;
-        }).catch(() => {
-          resolved = true;
-        });
-        return !resolved;
-      });
-      promises.length = 0;
-      promises.push(...stillRunning);
+    if (active.size >= concurrency) {
+      await Promise.race(active);
     }
   }
 
-  // Wait for remaining promises
-  await Promise.all(promises);
+  await Promise.all(active);
 
-  return { results, timings, errors };
+  const wallEnd = process.hrtime.bigint();
+  const wallClockMs = Number(wallEnd - wallStart) / 1_000_000;
+
+  return { results, timings, errors, wallClockMs };
 }

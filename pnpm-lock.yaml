@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@pierre/storage':
-        specifier: '0.2'
-        version: 0.2.3
+        specifier: ~1.10.0
+        version: 1.10.0
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
@@ -189,8 +189,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@pierre/storage@0.2.3':
-    resolution: {integrity: sha512-5GmYAosw0n1gg7kwwFpxSmETV/4s8Q7M0oP4tBJy+0X7WH+I6UAyrVP3YzMO1jFbS3T4k84+qFgw8cG3zgdLsQ==}
+  '@pierre/storage@1.10.0':
+    resolution: {integrity: sha512-qL4fASLUMNe5oTvjmsrGhOkh3CFaOqdfC2a8vD87evfUVrtUMuT1Vwj1aYo0WzHs8rtEMlrCFT7/GGY20exhXw==}
 
   '@types/fs-extra@11.0.4':
     resolution: {integrity: sha512-yTbItCNreRooED33qjunPthRcSjERP1r4MqCZc7wv0u2sUkzTFp45tgUfS5+r7FrZPdmCCNflLhVSP/o+SemsQ==}
@@ -349,7 +349,7 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@pierre/storage@0.2.3':
+  '@pierre/storage@1.10.0':
     dependencies:
       jose: 5.10.0
       snakecase-keys: 9.0.2

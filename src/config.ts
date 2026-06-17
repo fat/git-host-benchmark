@@ -21,6 +21,11 @@ export interface BenchmarkConfig {
       concurrency: number;
       iterations: number;
     };
+    shallowClone: {
+      enabled: boolean;
+      concurrency: number;
+      iterations: number;
+    };
     worktreeCommit: {
       enabled: boolean;
       concurrency: number;
@@ -47,6 +52,12 @@ export interface BenchmarkConfig {
       enabled: boolean;
       iterations: number;
       concurrency: number | number[];
+    };
+    contentionWrite: {
+      enabled: boolean;
+      concurrency: number;
+      iterations: number;
+      diffLineCounts: number[];
     };
   };
 }
@@ -122,6 +133,11 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         concurrency: fileConfig.benchmarks?.clone?.concurrency ?? 5,
         iterations: fileConfig.benchmarks?.clone?.iterations ?? 10,
       },
+      shallowClone: {
+        enabled: fileConfig.benchmarks?.shallowClone?.enabled ?? true,
+        concurrency: fileConfig.benchmarks?.shallowClone?.concurrency ?? 5,
+        iterations: fileConfig.benchmarks?.shallowClone?.iterations ?? 10,
+      },
       worktreeCommit: {
         enabled: fileConfig.benchmarks?.worktreeCommit?.enabled ?? true,
         concurrency: fileConfig.benchmarks?.worktreeCommit?.concurrency ?? 10,
@@ -151,6 +167,17 @@ export function loadConfig(configPath?: string): BenchmarkConfig {
         enabled: fileConfig.benchmarks?.sdkDeletePath?.enabled ?? true,
         iterations: fileConfig.benchmarks?.sdkDeletePath?.iterations ?? 20,
         concurrency: fileConfig.benchmarks?.sdkDeletePath?.concurrency ?? 1,
+      },
+      contentionWrite: {
+        enabled: fileConfig.benchmarks?.contentionWrite?.enabled ?? false,
+        concurrency:
+          fileConfig.benchmarks?.contentionWrite?.concurrency ?? 10,
+        iterations:
+          fileConfig.benchmarks?.contentionWrite?.iterations ?? 30,
+        diffLineCounts:
+          fileConfig.benchmarks?.contentionWrite?.diffLineCounts ?? [
+            10, 100, 1000, 10000,
+          ],
       },
     },
   };
@@ -182,6 +209,17 @@ function validateConfig(config: BenchmarkConfig): void {
   if (config.benchmarks.clone.enabled) {
     validatePositive(config.benchmarks.clone.concurrency, "Clone concurrency");
     validatePositive(config.benchmarks.clone.iterations, "Clone iterations");
+  }
+
+  if (config.benchmarks.shallowClone.enabled) {
+    validatePositive(
+      config.benchmarks.shallowClone.concurrency,
+      "Shallow clone concurrency"
+    );
+    validatePositive(
+      config.benchmarks.shallowClone.iterations,
+      "Shallow clone iterations"
+    );
   }
 
   if (config.benchmarks.worktreeCommit.enabled) {

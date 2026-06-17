@@ -47,7 +47,7 @@ export class WorktreeCommitBenchmark extends BaseBenchmark {
 
     let operationIndex = 0;
 
-    const { timings, errors } = await runConcurrentBenchmark(
+    const { timings, errors, wallClockMs } = await runConcurrentBenchmark(
       this.name,
       iterations,
       concurrency,
@@ -86,6 +86,6 @@ export class WorktreeCommitBenchmark extends BaseBenchmark {
     console.log("  Cleaning up worktrees...");
     this.worktreeManager.cleanup();
 
-    return this.createResult(timings, errors);
+    return this.createResult(timings, errors, { wallClockMs: Math.round(wallClockMs) });
   }
 }

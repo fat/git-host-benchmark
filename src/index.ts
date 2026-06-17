@@ -10,6 +10,7 @@ import type { BenchmarkMetrics, BenchmarkResult } from "./benchmarks/base.js";
 // Native Git benchmarks
 import { InitialPushBenchmark } from "./benchmarks/git-native/initialPush.js";
 import { CloneBenchmark } from "./benchmarks/git-native/clone.js";
+import { ShallowCloneBenchmark } from "./benchmarks/git-native/shallowClone.js";
 import { WorktreeCommitBenchmark } from "./benchmarks/git-native/worktreeCommit.js";
 import { ParallelPushBenchmark } from "./benchmarks/git-native/parallelPush.js";
 
@@ -17,6 +18,7 @@ import { ParallelPushBenchmark } from "./benchmarks/git-native/parallelPush.js";
 import { ListFilesBenchmark } from "./benchmarks/sdk/listFiles.js";
 import { CreateCommitBenchmark } from "./benchmarks/sdk/createCommit.js";
 import { DeletePathBenchmark } from "./benchmarks/sdk/deletePath.js";
+import { ContentionWriteBenchmark } from "./benchmarks/sdk/contentionWrite.js";
 import { join } from "node:path";
 
 interface CliArgs {
@@ -57,7 +59,7 @@ Options:
   -c, --config <path>        Path to config file (default: benchmark-config.json)
   -o, --output <path>        Export results to JSON file
   -b, --benchmarks <list>    Comma-separated list of benchmarks to run
-                             (initialPush,clone,worktreeCommit,parallelPush,sdkListFiles,sdkCreateCommit,sdkDeletePath)
+                             (initialPush,clone,shallowClone,worktreeCommit,parallelPush,sdkListFiles,sdkCreateCommit,sdkDeletePath,contentionWrite)
   -h, --help                 Show this help message
 
 Examples:
@@ -140,6 +142,17 @@ async function main() {
         processResults(result);
       }
 
+      // 2.5. Shallow Clone
+      if (
+        config.benchmarks.shallowClone.enabled &&
+        shouldRun("shallowClone") &&
+        remoteUrl
+      ) {
+        const benchmark = new ShallowCloneBenchmark(config, remoteUrl);
+        const result = await benchmark.run();
+        processResults(result);
+      }
+
       // 3. Worktree Commit
       if (
         config.benchmarks.worktreeCommit.enabled &&
@@ -217,6 +230,16 @@ async function main() {
           shouldRun("sdkDeletePath")
         ) {
           const benchmark = new DeletePathBenchmark(config, repoId);
+          const result = await benchmark.run();
+          processResults(result);
+        }
+
+        // SDK: contention write
+        if (
+          config.benchmarks.contentionWrite.enabled &&
+          shouldRun("contentionWrite")
+        ) {
+          const benchmark = new ContentionWriteBenchmark(config, repoId);
           const result = await benchmark.run();
           processResults(result);
         }
