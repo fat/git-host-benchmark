@@ -8,19 +8,22 @@
     "bench": "tsx src/index.ts",
     "dev": "tsx src/index.ts"
   },
-  "keywords": ["benchmark", "git", "storage"],
+  "keywords": [
+    "benchmark",
+    "git",
+    "storage"
+  ],
   "author": "Anysphere Inc.",
   "license": "MIT",
   "dependencies": {
-    "@pierre/storage": "0.2",
+    "@pierre/storage": "~1.10.0",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
     "@types/fs-extra": "^11.0.4",
-    "typescript": "^5.3.3",
-    "tsx": "^4.7.0"
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   }
 }
-

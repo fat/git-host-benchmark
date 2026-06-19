@@ -19,6 +19,20 @@ export function generateFileContent(
   return lines.join("");
 }
 
+export function generateLineContent(
+  lineCount: number,
+  seed?: string
+): string {
+  const prefix = seed || "test";
+  const lines: string[] = [];
+
+  for (let i = 0; i < lineCount; i++) {
+    lines.push(`${prefix}:line-${i}:${"x".repeat(50)}`);
+  }
+
+  return lines.join("\n") + "\n";
+}
+
 export function generateFileName(
   prefix: string,
   index: number,

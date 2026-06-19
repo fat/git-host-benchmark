@@ -92,7 +92,7 @@ export class ParallelPushBenchmark extends BaseBenchmark {
     // Step 2: Benchmark the parallel pushes (TIMED)
     console.log("  Running parallel push benchmark...");
 
-    const { timings, errors } = await runConcurrentBenchmark(
+    const { timings, errors, wallClockMs } = await runConcurrentBenchmark(
       this.name,
       iterations,
       concurrency,
@@ -141,6 +141,7 @@ export class ParallelPushBenchmark extends BaseBenchmark {
       totalBranches,
       concurrency,
       iterations,
+      wallClockMs: Math.round(wallClockMs),
     });
   }
 }

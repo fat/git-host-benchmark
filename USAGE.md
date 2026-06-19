@@ -39,6 +39,9 @@ You can use the provided script to create a test repository:
 
 # Create a larger repo with 1000 files of 10KB each
 ./scripts/create-test-repo.sh ./test-data/large-repo 1000 10240
+
+# Create a repo with large git history (10k commits)
+./scripts/create-test-repo-large-history.sh ./test-data/large-history-repo 10000 10 512
 ```
 
 Or use an existing Git repository by setting `LOCAL_REPO_PATH` to its location.

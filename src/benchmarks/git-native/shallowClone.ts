@@ -4,15 +4,15 @@ import {
   runConcurrentBenchmark,
 } from "../base.js";
 import type { BenchmarkConfig } from "../../config.js";
-import { gitClone, removeDir } from "../../utils/git.js";
+import { gitShallowClone, removeDir } from "../../utils/git.js";
 import { join } from "node:path";
 
-export class CloneBenchmark extends BaseBenchmark {
+export class ShallowCloneBenchmark extends BaseBenchmark {
   private remoteUrl: string;
   private workingDir: string;
 
   constructor(config: BenchmarkConfig, remoteUrl: string) {
-    super("Concurrent Clone", config);
+    super("Shallow Clone", config);
     this.remoteUrl = remoteUrl;
     this.workingDir = config.workingDir;
   }
@@ -20,15 +20,15 @@ export class CloneBenchmark extends BaseBenchmark {
   async run(): Promise<BenchmarkResult> {
     console.log(`\n📥 Running ${this.name} benchmark...`);
 
-    const { concurrency, iterations } = this.config.benchmarks.clone;
+    const { concurrency, iterations } = this.config.benchmarks.shallowClone;
 
     console.log(`  Concurrency: ${concurrency}`);
     console.log(`  Iterations: ${iterations}`);
 
     // Warmup
     await this.warmup(async () => {
-      const warmupPath = join(this.workingDir, "warmup-clone");
-      await gitClone(this.remoteUrl, warmupPath);
+      const warmupPath = join(this.workingDir, "warmup-shallow-clone");
+      await gitShallowClone(this.remoteUrl, warmupPath);
       removeDir(warmupPath);
     }, 1);
 
@@ -39,8 +39,8 @@ export class CloneBenchmark extends BaseBenchmark {
       iterations,
       concurrency,
       async (index) => {
-        const clonePath = join(this.workingDir, `clone-${index}`);
-        await gitClone(this.remoteUrl, clonePath);
+        const clonePath = join(this.workingDir, `shallow-clone-${index}`);
+        await gitShallowClone(this.remoteUrl, clonePath);
         // Clean up immediately after cloning
         removeDir(clonePath);
         return clonePath;
@@ -52,7 +52,7 @@ export class CloneBenchmark extends BaseBenchmark {
       }
     );
 
-    console.log(`\r  ✓ Completed ${timings.length} clones`);
+    console.log(`\r  ✓ Completed ${timings.length} shallow clones`);
     if (errors > 0) {
       console.log(`  ⚠ ${errors} errors occurred`);
     }

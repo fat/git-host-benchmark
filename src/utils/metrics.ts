@@ -53,9 +53,15 @@ export function calculateMetrics(result: BenchmarkResult): BenchmarkMetrics {
   const mean = calculateMean(timingsMs);
   const stdDev = calculateStdDev(timingsMs, mean);
 
-  // Calculate total time in seconds for throughput
-  const totalTimeSeconds = timingsMs.reduce((sum, val) => sum + val, 0) / 1000;
-  const throughput = successCount / totalTimeSeconds;
+  // Use wall-clock throughput from metadata if available (concurrent benchmarks),
+  // otherwise fall back to sum-of-timings (sequential benchmarks)
+  let throughput: number;
+  if (result.metadata?.wallClockMs) {
+    throughput = successCount / ((result.metadata.wallClockMs as number) / 1000);
+  } else {
+    const totalTimeSeconds = timingsMs.reduce((sum, val) => sum + val, 0) / 1000;
+    throughput = successCount / totalTimeSeconds;
+  }
 
   return {
     name: result.name,

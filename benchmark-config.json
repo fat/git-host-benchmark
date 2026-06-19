@@ -10,6 +10,11 @@
       "concurrency": 5,
       "iterations": 10
     },
+    "shallowClone": {
+      "enabled": true,
+      "concurrency": 5,
+      "iterations": 10
+    },
     "worktreeCommit": {
       "enabled": true,
       "concurrency": 10,
@@ -27,6 +32,12 @@
     "sdkDeletePath": {
       "enabled": true,
       "iterations": 20
+    },
+    "contentionWrite": {
+      "enabled": true,
+      "concurrency": 10,
+      "iterations": 30,
+      "diffLineCounts": [10, 100, 1000, 10000]
     }
   }
 }
